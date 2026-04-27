@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="La Podrida"/>
+  <meta name="theme-color" content="#0d1b14"/>
+  <title>La Podrida</title>
+
+  <!-- PWA manifest inline -->
+  <script>
+    const manifest = {
+      name: "La Podrida",
+      short_name: "La Podrida",
+      description: "Marcador para el juego de cartas La Podrida",
+      start_url: ".",
+      display: "standalone",
+      background_color: "#0d1b14",
+      theme_color: "#0d1b14",
+      icons: [{
+        src: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230d1b14'/><text y='.9em' font-size='80' x='10'>🃏</text></svg>",
+        sizes: "192x192", type: "image/svg+xml"
+      }]
+    };
+    const blob = new Blob([JSON.stringify(manifest)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('link');
+    link.rel = 'manifest'; link.href = url;
+    document.currentScript.after(link);
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow-x: hidden; }
+    body {
+      font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif;
+      background: linear-gradient(160deg, #0d1b14 0%, #12211a 60%, #0d1b14 100%);
+      background-attachment: fixed;
+      color: white;
+      min-height: 100vh;
+      -webkit-tap-highlight-color: transparent;
+    }
+    input { -webkit-appearance: none; }
+    button { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+
+    /* ── Screens ── */
+    .screen { display: none; min-height: 100vh; }
+    .screen.active { display: block; }
+
+    /* ── Setup ── */
+    .setup-card {
+      max-width: 480px; margin: 0 auto;
+      padding: 32px 20px 50px;
+    }
+    .setup-title { text-align: center; margin-bottom: 32px; }
+    .setup-title .icon { font-size: 48px; display: block; }
+    .logo {
+      color: #c8a84b; font-size: 34px; letter-spacing: 3px;
+      text-shadow: 0 0 30px rgba(200,168,75,0.4);
+      margin: 8px 0 4px;
+    }
+    .subtitle { color: rgba(255,255,255,0.4); font-size: 14px; }
+    .label {
+      display: block; color: rgba(200,168,75,0.7);
+      font-size: 11px; letter-spacing: 2px; margin-bottom: 10px;
+    }
+    .count-btns { display: flex; gap: 8px; margin-bottom: 24px; }
+    .count-btn {
+      flex: 1; padding: 11px 0; border-radius: 10px;
+      border: 2px solid rgba(200,168,75,0.2);
+      background: rgba(255,255,255,0.03);
+      color: rgba(255,255,255,0.5); font-size: 18px; font-weight: bold;
+      cursor: pointer; font-family: inherit; transition: all 0.15s;
+    }
+    .count-btn.active {
+      border-color: #c8a84b;
+      background: rgba(200,168,75,0.12);
+      color: #c8a84b;
+    }
+    .player-setup-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .badge {
+      width: 32px; height: 32px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: bold; cursor: pointer;
+      border: 1px solid rgba(200,168,75,0.3); color: #c8a84b;
+      flex-shrink: 0; transition: all 0.15s;
+      background: rgba(200,168,75,0.15);
+    }
+    .badge.dealer { background: #c8a84b; color: #1a1a1a; }
+    input[type=text] {
+      flex: 1; padding: 10px 14px; border-radius: 10px;
+      border: 1.5px solid rgba(200,168,75,0.2);
+      background: rgba(255,255,255,0.05); color: white;
+      font-size: 15px; outline: none; font-family: inherit;
+    }
+    input[type=text]::placeholder { color: rgba(255,255,255,0.25); }
+    .hint { color: rgba(200,168,75,0.5); font-size: 12px; text-align: center; margin-bottom: 20px; }
+    .btn {
+      width: 100%; padding: 14px; border-radius: 12px; border: none;
+      background: linear-gradient(135deg, #c8a84b, #8a6d28);
+      color: #fff; font-size: 15px; font-weight: bold;
+      letter-spacing: 1.5px; cursor: pointer;
+      font-family: inherit; transition: opacity 0.2s;
+    }
+    .btn:disabled { opacity: 0.3; cursor: default; }
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid rgba(200,168,75,0.3);
+      color: rgba(200,168,75,0.7);
+      font-size: 13px; letter-spacing: 1px;
+      padding: 10px; margin-top: 10px;
+    }
+
+    /* ── Game Header ── */
+    .game-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(200,168,75,0.2);
+      background: rgba(0,0,0,0.4);
+      position: sticky; top: 0; z-index: 20;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    .game-header-title { color: #c8a84b; font-weight: bold; font-size: 17px; letter-spacing: 2px; }
+    .game-header-sub { font-size: 12px; color: rgba(255,255,255,0.45); }
+
+    /* ── Panel ── */
+    .panel {
+      margin: 12px 12px 10px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(200,168,75,0.2);
+      border-radius: 16px; padding: 14px;
+    }
+    .panel-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 12px;
+    }
+    .panel-title { color: #c8a84b; font-weight: bold; font-size: 14px; }
+    .panel-dealer { font-size: 12px; color: rgba(255,255,255,0.4); }
+    .panel-dealer b { color: #c8a84b; }
+    .phases { display: flex; gap: 6px; margin-bottom: 12px; }
+    .phase-tag {
+      padding: 4px 12px; border-radius: 20px;
+      font-size: 11px; font-weight: bold; letter-spacing: 0.5px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.3);
+    }
+    .phase-tag.active {
+      border-color: rgba(200,168,75,0.5);
+      background: rgba(200,168,75,0.2); color: #c8a84b;
+    }
+    .player-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+      gap: 8px; flex-wrap: wrap;
+    }
+    .player-name {
+      font-size: 14px; color: white;
+      min-width: 70px; max-width: 100px;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .num-btns { display: flex; gap: 5px; flex-wrap: wrap; justify-content: flex-end; }
+    .num-btn {
+      width: 34px; height: 34px; border-radius: 8px;
+      border: 1.5px solid rgba(200,168,75,0.2);
+      background: rgba(255,255,255,0.04);
+      color: rgba(255,255,255,0.6); font-size: 14px; font-weight: bold;
+      cursor: pointer; font-family: inherit;
+    }
+    .num-btn.selected {
+      border: 2px solid #c8a84b;
+      background: rgba(200,168,75,0.2); color: #c8a84b;
+    }
+    .notice {
+      padding: 8px 12px; border-radius: 8px; border: 1px solid;
+      margin-top: 10px; font-size: 13px; background: rgba(0,0,0,0.2);
+    }
+    .notice.ok { border-color: #5db87a; color: #7ddb9a; }
+    .notice.bad { border-color: #e05555; color: #e07777; }
+
+    /* ── Table ── */
+    .table-wrap {
+      overflow-x: auto; margin: 0 12px 20px;
+      border-radius: 14px; border: 1px solid rgba(200,168,75,0.15);
+      background: rgba(0,0,0,0.25);
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    thead th {
+      padding: 8px 6px; text-align: center;
+      color: rgba(200,168,75,0.7); font-weight: bold;
+      font-size: 11px; letter-spacing: 1px;
+      border-bottom: 1px solid rgba(200,168,75,0.2);
+      background: rgba(0,0,0,0.3); white-space: nowrap;
+    }
+    tbody td {
+      padding: 6px 4px; border-bottom: 1px solid rgba(255,255,255,0.04);
+      text-align: center; vertical-align: middle;
+      color: rgba(255,255,255,0.7); font-size: 11px;
+    }
+    tr.active-row { background: rgba(200,168,75,0.07); border-left: 3px solid #c8a84b; }
+    tfoot td {
+      padding: 8px 4px; text-align: center; font-weight: bold;
+      color: #c8a84b; font-size: 13px;
+      border-top: 2px solid rgba(200,168,75,0.3);
+    }
+    .pts-hit { color: #7ddb9a; font-weight: bold; }
+    .pts-over { color: #f0c040; font-weight: bold; }
+    .pts-miss { color: #e07777; font-weight: bold; }
+    .cumul { color: #c8a84b; font-size: 11px; }
+
+    /* ── Final ── */
+    .final-card { max-width: 480px; margin: 0 auto; padding: 32px 20px 50px; }
+    .final-title { text-align: center; margin-bottom: 28px; }
+    .rank-row {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 16px; border-radius: 14px; margin-bottom: 10px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .rank-row.first {
+      background: linear-gradient(135deg, rgba(200,168,75,0.2), rgba(200,168,75,0.05));
+      border-color: rgba(200,168,75,0.5);
+    }
+    .rank-icon { font-size: 26px; width: 36px; text-align: center; }
+    .rank-name { flex: 1; color: white; font-size: 17px; }
+    .rank-name.bold { font-weight: bold; }
+    .rank-score { color: #c8a84b; font-size: 24px; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+<!-- ══ SETUP SCREEN ══════════════════════════════════════════════════════════ -->
+<div id="screen-setup" class="screen active">
+  <div class="setup-card">
+    <div class="setup-title">
+      <span class="icon">🃏</span>
+      <h1 class="logo">LA PODRIDA</h1>
+      <p class="subtitle">Marcador de partida</p>
+    </div>
+
+    <label class="label">NÚMERO DE JUGADORES</label>
+    <div class="count-btns" id="count-btns"></div>
+
+    <label class="label">NOMBRES</label>
+    <div id="names-container"></div>
+
+    <p class="hint">Tocá el número para elegir quién reparte primero 🃏</p>
+    <button class="btn" id="start-btn" disabled onclick="startGame()">COMENZAR PARTIDA</button>
+  </div>
+</div>
+
+<!-- ══ GAME SCREEN ═══════════════════════════════════════════════════════════ -->
+<div id="screen-game" class="screen">
+  <div class="game-header">
+    <span class="game-header-title">LA PODRIDA</span>
+    <span class="game-header-sub" id="header-sub"></span>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title" id="panel-title"></span>
+      <span class="panel-dealer" id="panel-dealer"></span>
+    </div>
+    <div class="phases">
+      <div class="phase-tag" id="phase-1">1. Pedidas</div>
+      <div class="phase-tag" id="phase-2">2. Realizadas</div>
+    </div>
+    <div id="player-inputs"></div>
+    <div id="notice" style="display:none" class="notice"></div>
+    <button class="btn" id="advance-btn" disabled style="margin-top:10px" onclick="handleAdvance()">CONFIRMAR PEDIDAS →</button>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead id="table-head"></thead>
+      <tbody id="table-body"></tbody>
+      <tfoot id="table-foot"></tfoot>
+    </table>
+  </div>
+</div>
+
+<!-- ══ FINAL SCREEN ══════════════════════════════════════════════════════════ -->
+<div id="screen-final" class="screen">
+  <div class="final-card">
+    <div class="final-title">
+      <div style="font-size:48px">🏆</div>
+      <h1 class="logo">RESULTADO FINAL</h1>
+      <p class="subtitle">Partida terminada</p>
+    </div>
+    <div id="final-rankings"></div>
+    <div style="margin-top:24px; overflow-x:auto; border-radius:14px; border:1px solid rgba(200,168,75,0.15); background:rgba(0,0,0,0.25);">
+      <table>
+        <thead id="final-table-head"></thead>
+        <tbody id="final-table-body"></tbody>
+        <tfoot id="final-table-foot"></tfoot>
+      </table>
+    </div>
+    <button class="btn" style="margin-top:24px" onclick="newGame()">🃏 NUEVA PARTIDA</button>
+  </div>
+</div>
+
+<script>
+// ══ State ════════════════════════════════════════════════════════════════════
+let state = {
+  players: [],
+  firstDealer: 0,
+  rounds: [],
+  data: [],       // [roundIdx][playerIdx] = { pedidas, realizadas }
+  activeRound: 0,
+  phase: 'pedidas'
+};
+
+// ══ Game Logic ════════════════════════════════════════════════════════════════
+function getRounds(n) {
+  let max = n <= 5 ? 10 : n === 6 ? 8 : 7;
+  const up = Array.from({length: max}, (_, i) => i + 1);
+  return [...up, ...[...up].reverse()];
+}
+
+function calcScore(pedidas, realizadas) {
+  if (pedidas === realizadas) return 10 + 3 * realizadas;
+  if (realizadas > pedidas) return 3 * (realizadas - pedidas);
+  return -3 * (pedidas - realizadas);
+}
+
+function dealerFor(ri) {
+  return (state.firstDealer + ri) % state.players.length;
+}
+
+function cumulativeScore(pi, upToRound) {
+  let s = 0;
+  for (let r = 0; r <= upToRound; r++) {
+    const {pedidas, realizadas} = state.data[r][pi];
+    if (pedidas !== null && realizadas !== null) s += calcScore(pedidas, realizadas);
+  }
+  return s;
+}
+
+function getTotals() {
+  return state.players.map((_, pi) => {
+    let s = 0;
+    state.data.forEach(row => {
+      const {pedidas, realizadas} = row[pi];
+      if (pedidas !== null && realizadas !== null) s += calcScore(pedidas, realizadas);
+    });
+    return s;
+  });
+}
+
+// ══ Setup ════════════════════════════════════════════════════════════════════
+let setupCount = 4;
+let setupDealer = 0;
+let setupNames = Array(7).fill('');
+
+function initSetup() {
+  setupCount = 4; setupDealer = 0; setupNames = Array(7).fill('');
+  renderCountBtns();
+  renderNameInputs();
+}
+
+function renderCountBtns() {
+  const el = document.getElementById('count-btns');
+  el.innerHTML = [4,5,6,7].map(n => `
+    <button class="count-btn ${n===setupCount?'active':''}" onclick="setCount(${n})">${n}</button>
+  `).join('');
+}
+
+function setCount(n) {
+  setupCount = n;
+  if (setupDealer >= n) setupDealer = 0;
+  renderCountBtns();
+  renderNameInputs();
+  checkStartBtn();
+}
+
+function renderNameInputs() {
+  const el = document.getElementById('names-container');
+  el.innerHTML = Array.from({length: setupCount}, (_, i) => `
+    <div class="player-setup-row">
+      <div class="badge ${i===setupDealer?'dealer':''}" onclick="setDealer(${i})" id="badge-${i}">
+        ${i===setupDealer ? '🃏' : i+1}
+      </div>
+      <input type="text" placeholder="Jugador ${i+1}"
+        value="${setupNames[i]||''}"
+        oninput="setupNames[${i}]=this.value; checkStartBtn()"
+        style="flex:1;padding:10px 14px;border-radius:10px;border:1.5px solid rgba(200,168,75,0.2);background:rgba(255,255,255,0.05);color:white;font-size:15px;outline:none;font-family:inherit"/>
+    </div>
+  `).join('');
+}
+
+function setDealer(i) {
+  setupDealer = i;
+  renderNameInputs();
+}
+
+function checkStartBtn() {
+  const valid = setupNames.slice(0, setupCount).every(n => n.trim() !== '');
+  document.getElementById('start-btn').disabled = !valid;
+}
+
+// ══ Start Game ════════════════════════════════════════════════════════════════
+function startGame() {
+  const players = setupNames.slice(0, setupCount).map(n => n.trim());
+  const rounds = getRounds(players.length);
+  state = {
+    players,
+    firstDealer: setupDealer,
+    rounds,
+    data: rounds.map(() => players.map(() => ({pedidas: null, realizadas: null}))),
+    activeRound: 0,
+    phase: 'pedidas'
+  };
+  showScreen('game');
+  buildTableHead();
+  renderGame();
+}
+
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+// ══ Game Render ═══════════════════════════════════════════════════════════════
+function renderGame() {
+  const {players, rounds, activeRound, phase, data} = state;
+  const cards = rounds[activeRound];
+  const dealer = players[dealerFor(activeRound)];
+
+  // header
+  document.getElementById('header-sub').textContent =
+    `Mano ${activeRound+1}/${rounds.length} · ${cards} carta${cards!==1?'s':''}`;
+
+  // panel
+  document.getElementById('panel-title').textContent =
+    `MANO ${activeRound+1} — ${cards} carta${cards!==1?'s':''}`;
+  document.getElementById('panel-dealer').innerHTML =
+    `Reparte: <b>${dealer}</b>`;
+
+  // phases
+  document.getElementById('phase-1').className = 'phase-tag' + (phase==='pedidas'?' active':'');
+  document.getElementById('phase-2').className = 'phase-tag' + (phase==='realizadas'?' active':'');
+
+  // player inputs
+  const inp = document.getElementById('player-inputs');
+  inp.innerHTML = players.map((name, pi) => {
+    const cell = data[activeRound][pi];
+    const isDealer = dealerFor(activeRound) === pi;
+    const fieldKey = phase;
+    const current = cell[fieldKey];
+    const nums = Array.from({length: cards+1}, (_, v) => v);
+    return `
+      <div class="player-row">
+        <div class="player-name">${isDealer ? '🃏 ' : ''}${name}</div>
+        <div class="num-btns">
+          ${nums.map(v => `
+            <button class="num-btn ${current===v?'selected':''}"
+              onclick="selectVal(${pi},${v})">${v}</button>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // notice
+  updateNotice();
+  // advance btn
+  updateAdvanceBtn();
+  // table
+  renderTableBody();
+}
+
+function selectVal(pi, v) {
+  const {activeRound, phase, data} = state;
+  const cell = data[activeRound][pi];
+  cell[phase] = cell[phase] === v ? null : v;
+  renderGame();
+}
+
+function updateNotice() {
+  const {activeRound, phase, rounds, data, players} = state;
+  const notice = document.getElementById('notice');
+  if (phase !== 'pedidas') { notice.style.display = 'none'; return; }
+  const row = data[activeRound];
+  const allFilled = players.every((_, pi) => row[pi].pedidas !== null);
+  if (!allFilled) { notice.style.display = 'none'; return; }
+  const total = row.reduce((s, c) => s + c.pedidas, 0);
+  const cards = rounds[activeRound];
+  const isPodrida = total === cards;
+  notice.style.display = 'block';
+  notice.className = 'notice ' + (isPodrida ? 'bad' : 'ok');
+  notice.textContent = isPodrida
+    ? `⚠️ ¡La podrida! Total pedido = ${cards} cartas.`
+    : `✓ Total pedido: ${total} / ${cards}`;
+}
+
+function updateAdvanceBtn() {
+  const {activeRound, phase, data, players, rounds} = state;
+  const row = data[activeRound];
+  const allFilled = players.every((_, pi) => row[pi][phase] !== null);
+  const btn = document.getElementById('advance-btn');
+  btn.disabled = !allFilled;
+  const isLast = activeRound + 1 >= rounds.length;
+  if (phase === 'pedidas') btn.textContent = 'CONFIRMAR PEDIDAS →';
+  else btn.textContent = isLast ? 'VER RESULTADO FINAL 🏆' : 'SIGUIENTE MANO →';
+}
+
+function handleAdvance() {
+  const {activeRound, phase, data, players, rounds} = state;
+  const row = data[activeRound];
+  const allFilled = players.every((_, pi) => row[pi][phase] !== null);
+  if (!allFilled) return;
+
+  if (phase === 'pedidas') {
+    state.phase = 'realizadas';
+    renderGame();
+  } else {
+    if (activeRound + 1 >= rounds.length) {
+      showFinal();
+    } else {
+      state.activeRound++;
+      state.phase = 'pedidas';
+      renderGame();
+      // scroll active row into view
+      setTimeout(() => {
+        const rows = document.querySelectorAll('tr[data-round]');
+        if (rows[state.activeRound]) rows[state.activeRound].scrollIntoView({behavior:'smooth', block:'center'});
+      }, 100);
+    }
+  }
+}
+
+// ══ Table ════════════════════════════════════════════════════════════════════
+function buildTableHead() {
+  const {players} = state;
+  document.getElementById('table-head').innerHTML = `<tr>
+    <th>#</th><th>🃏</th>
+    ${players.map(p => `<th>${p.split(' ')[0]}</th>`).join('')}
+  </tr>`;
+}
+
+function renderTableBody() {
+  const {rounds, activeRound, data, players} = state;
+  const totals = getTotals();
+
+  document.getElementById('table-body').innerHTML = rounds.map((cards, ri) => {
+    const isActive = ri === activeRound;
+    return `<tr class="${isActive?'active-row':''}" data-round="${ri}">
+      <td>${ri+1}</td>
+      <td style="color:rgba(255,255,255,0.4)">${cards}</td>
+      ${players.map((_, pi) => {
+        const {pedidas, realizadas} = data[ri][pi];
+        if (ri < activeRound || (pedidas !== null && realizadas !== null)) {
+          const pts = calcScore(pedidas, realizadas);
+          const hit = pedidas === realizadas;
+          const cls = hit ? 'pts-hit' : pts >= 0 ? 'pts-over' : 'pts-miss';
+          const cumul = cumulativeScore(pi, ri);
+          return `<td>
+            <div style="color:rgba(255,255,255,0.4);font-size:10px">${pedidas}/${realizadas}</div>
+            <div class="${cls}">${pts>=0?'+':''}${pts}</div>
+            <div class="cumul">${cumul}</div>
+          </td>`;
+        } else if (ri === activeRound) {
+          const p = data[ri][pi].pedidas;
+          return `<td style="color:rgba(255,255,255,0.25)">${p!==null?p+'/-':'–'}</td>`;
+        } else {
+          return `<td style="color:rgba(255,255,255,0.1)">·</td>`;
+        }
+      }).join('')}
+    </tr>`;
+  }).join('');
+
+  document.getElementById('table-foot').innerHTML = `<tr>
+    <td colspan="2" style="color:rgba(200,168,75,0.6);font-size:11px;font-weight:bold;text-align:center">TOTAL</td>
+    ${totals.map(t => `<td>${t}</td>`).join('')}
+  </tr>`;
+}
+
+// ══ Final ════════════════════════════════════════════════════════════════════
+function showFinal() {
+  showScreen('final');
+  const {players, rounds, data} = state;
+  const totals = getTotals();
+
+  const ranked = players
+    .map((name, i) => ({name, total: totals[i], idx: i}))
+    .sort((a, b) => b.total - a.total);
+
+  const crowns = ['🥇','🥈','🥉'];
+  document.getElementById('final-rankings').innerHTML = ranked.map((p, rank) => `
+    <div class="rank-row ${rank===0?'first':''}">
+      <span class="rank-icon">${crowns[rank] ?? (rank+1+'.')}</span>
+      <span class="rank-name ${rank===0?'bold':''}">${p.name}</span>
+      <span class="rank-score">${p.total}</span>
+    </div>
+  `).join('');
+
+  // full table
+  document.getElementById('final-table-head').innerHTML = `<tr>
+    <th>M</th><th>C</th>
+    ${players.map(p => `<th>${p.split(' ')[0]}</th>`).join('')}
+  </tr>`;
+
+  document.getElementById('final-table-body').innerHTML = rounds.map((cards, ri) => `
+    <tr>
+      <td>${ri+1}</td>
+      <td style="color:rgba(255,255,255,0.4)">${cards}</td>
+      ${players.map((_, pi) => {
+        const {pedidas, realizadas} = data[ri][pi];
+        const pts = calcScore(pedidas, realizadas);
+        const hit = pedidas === realizadas;
+        const cls = hit ? 'pts-hit' : pts >= 0 ? 'pts-over' : 'pts-miss';
+        return `<td>
+          <div style="color:rgba(255,255,255,0.35);font-size:10px">${pedidas}/${realizadas}</div>
+          <div class="${cls}">${pts>=0?'+':''}${pts}</div>
+        </td>`;
+      }).join('')}
+    </tr>
+  `).join('');
+
+  document.getElementById('final-table-foot').innerHTML = `<tr>
+    <td colspan="2" style="color:rgba(200,168,75,0.6);font-size:11px;font-weight:bold;text-align:center">TOTAL</td>
+    ${totals.map(t => `<td>${t}</td>`).join('')}
+  </tr>`;
+}
+
+function newGame() {
+  showScreen('setup');
+  initSetup();
+}
+
+// ══ Init ══════════════════════════════════════════════════════════════════════
+initSetup();
+
+// ── Service Worker for offline use ───────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  const sw = `
+    const CACHE = 'lapodrida-v1';
+    self.addEventListener('install', e => {
+      e.waitUntil(caches.open(CACHE).then(c => c.addAll(['/'])));
+      self.skipWaiting();
+    });
+    self.addEventListener('fetch', e => {
+      e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
+    });
+  `;
+  const blob = new Blob([sw], {type:'text/javascript'});
+  navigator.serviceWorker.register(URL.createObjectURL(blob));
+}
+</script>
+</body>
+</html>
