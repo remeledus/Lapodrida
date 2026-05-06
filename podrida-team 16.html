@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="Podrida Team"/>
+  <meta name="theme-color" content="#0a0a0a"/>
+  <title>Podrida Team</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap');
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --gold: #c8a84b;
+      --gold2: #e8c96b;
+      --red: #c0392b;
+      --bg: #0a0a0a;
+      --bg2: #111;
+      --bg3: #1a1a1a;
+      --border: rgba(200,168,75,0.15);
+      --text: rgba(255,255,255,0.9);
+      --text2: rgba(255,255,255,0.5);
+      --text3: rgba(255,255,255,0.25);
+    }
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; }
+    button { font-family: 'Inter', sans-serif; cursor: pointer; border: none; }
+    input, select { font-family: 'Inter', sans-serif; }
+    .screen { display: none; min-height: 100vh; }
+    .screen.active { display: block; }
+
+    /* ── LOGIN ── */
+    .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
+      background: radial-gradient(ellipse at 50% 0%, rgba(200,168,75,0.08) 0%, transparent 70%), var(--bg); }
+    .login-card { width: 100%; max-width: 380px; }
+    .login-logo { text-align: center; margin-bottom: 36px; }
+    .login-logo img { width: 90px; height: 90px; object-fit: contain; }
+    .login-title { font-family: 'Bebas Neue', sans-serif; font-size: 42px; letter-spacing: 4px;
+      color: var(--gold); text-shadow: 0 0 40px rgba(200,168,75,0.3); line-height: 1; }
+    .login-sub { color: var(--text2); font-size: 13px; margin-top: 4px; letter-spacing: 1px; }
+    .login-form { background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+      border-radius: 20px; padding: 28px 24px; }
+    .form-group { margin-bottom: 16px; }
+    .form-label { display: block; font-size: 11px; letter-spacing: 1.5px; color: var(--gold);
+      font-weight: 600; margin-bottom: 8px; }
+    .form-input { width: 100%; padding: 12px 16px; border-radius: 10px;
+      border: 1.5px solid rgba(200,168,75,0.2); background: rgba(255,255,255,0.04);
+      color: white; font-size: 15px; outline: none; transition: border 0.2s; }
+    .form-input:focus { border-color: var(--gold); }
+    .login-btn { width: 100%; padding: 14px; border-radius: 12px;
+      background: linear-gradient(135deg, var(--gold), #8a6d28);
+      color: #fff; font-size: 14px; font-weight: 700; letter-spacing: 2px;
+      margin-top: 8px; transition: opacity 0.2s; }
+    .login-btn:disabled { opacity: 0.4; }
+    .login-error { color: #e07777; font-size: 13px; text-align: center; margin-top: 12px; }
+    .login-guest { text-align: center; margin-top: 16px; }
+    .login-guest button { background: none; color: var(--text2); font-size: 13px;
+      text-decoration: underline; border: none; cursor: pointer; }
+
+    /* ── MAIN NAV ── */
+    .main-header { background: rgba(0,0,0,0.6); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border); padding: 10px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 50; }
+    .main-header-logo { display: flex; align-items: center; gap: 10px; }
+    .main-header-logo img { width: 32px; height: 32px; object-fit: contain; }
+    .main-header-title { font-family: 'Bebas Neue', sans-serif; font-size: 22px;
+      letter-spacing: 3px; color: var(--gold); }
+    .main-header-user { font-size: 12px; color: var(--text2); }
+    .logout-btn { background: none; color: var(--text3); font-size: 11px;
+      border: 1px solid rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 6px; }
+
+    /* ── TABS ── */
+    .tabs { display: flex; border-bottom: 1px solid var(--border);
+      background: var(--bg); position: sticky; top: 53px; z-index: 40; overflow-x: auto; }
+    .tab { flex: 1; min-width: 80px; padding: 12px 8px; text-align: center;
+      font-size: 11px; font-weight: 600; letter-spacing: 1px; color: var(--text2);
+      border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap;
+      transition: all 0.2s; -webkit-tap-highlight-color: transparent; }
+    .tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+    /* ── TABLA ── */
+    .page { padding: 16px 12px 40px; }
+    .section-title { font-family: 'Bebas Neue', sans-serif; font-size: 28px;
+      letter-spacing: 3px; color: var(--gold); margin-bottom: 4px; }
+    .section-sub { font-size: 12px; color: var(--text2); margin-bottom: 16px; }
+    .table-card { background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 16px; overflow: hidden; margin-bottom: 16px; }
+    .standings-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .standings-table th { padding: 10px 8px; text-align: center;
+      color: var(--gold); font-size: 10px; letter-spacing: 1.5px; font-weight: 700;
+      border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.3); white-space: nowrap; }
+    .standings-table th:nth-child(2) { text-align: left; }
+    .standings-table td { padding: 10px 8px; border-bottom: 1px solid rgba(255,255,255,0.04);
+      text-align: center; vertical-align: middle; }
+    .standings-table td:nth-child(2) { text-align: left; }
+    .standings-table tr:last-child td { border-bottom: none; }
+    .pos-badge { width: 24px; height: 24px; border-radius: 50%; display: inline-flex;
+      align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+    .pos-1 { background: linear-gradient(135deg, #FFD700, #FFA500); color: #000; }
+    .pos-2 { background: linear-gradient(135deg, #C0C0C0, #A0A0A0); color: #000; }
+    .pos-3 { background: linear-gradient(135deg, #CD7F32, #8B4513); color: #fff; }
+    .pos-n { background: rgba(255,255,255,0.08); color: var(--text2); }
+    .player-name { font-weight: 600; font-size: 13px; color: var(--text); }
+    .promedio { color: var(--gold); font-weight: 700; font-size: 13px; }
+    .pts { color: var(--text); font-weight: 500; }
+    .pj { color: var(--text2); }
+    .diff { color: var(--text3); font-size: 11px; }
+    .corte-bar { background: var(--red); padding: 8px 12px; text-align: center;
+      font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 3px;
+      color: white; }
+
+    /* ── PARTIDAS ── */
+    .partida-card { background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 14px; padding: 14px; margin-bottom: 12px; cursor: pointer;
+      transition: border-color 0.2s; }
+    .partida-card:hover { border-color: rgba(200,168,75,0.4); }
+    .partida-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .partida-date { font-size: 13px; color: var(--gold); font-weight: 600; }
+    .partida-status { font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 600; }
+    .status-live { background: rgba(192,57,43,0.2); color: #e07777; border: 1px solid rgba(192,57,43,0.3); }
+    .status-done { background: rgba(100,200,100,0.1); color: #7ddb9a; border: 1px solid rgba(100,200,100,0.2); }
+    .partida-players { display: flex; flex-wrap: wrap; gap: 6px; }
+    .player-chip { font-size: 11px; padding: 3px 10px; border-radius: 20px;
+      background: rgba(255,255,255,0.06); color: var(--text2); font-weight: 500; }
+    .player-chip.winner { background: rgba(200,168,75,0.15); color: var(--gold); }
+
+    /* ── STATS ── */
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+    .stat-card { background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 12px; padding: 14px; text-align: center; }
+    .stat-value { font-family: 'Bebas Neue', sans-serif; font-size: 32px;
+      color: var(--gold); line-height: 1; }
+    .stat-label { font-size: 10px; color: var(--text2); letter-spacing: 1px;
+      margin-top: 4px; font-weight: 600; }
+    .player-selector { width: 100%; padding: 10px 14px; border-radius: 10px;
+      border: 1.5px solid var(--border); background: rgba(255,255,255,0.04);
+      color: white; font-size: 14px; outline: none; margin-bottom: 16px; }
+    .stat-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .stat-bar-label { font-size: 12px; color: var(--text2); width: 80px; text-align: right; flex-shrink: 0; }
+    .stat-bar-track { flex: 1; height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; }
+    .stat-bar-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--gold), var(--gold2)); transition: width 0.6s ease; }
+    .stat-bar-val { font-size: 12px; color: var(--text); width: 40px; font-weight: 600; }
+
+    /* ── LOADING ── */
+    .loading { text-align: center; padding: 40px; color: var(--text2); font-size: 14px; }
+    .empty { text-align: center; padding: 40px; color: var(--text3); font-size: 13px; }
+
+    /* ── PARTIDA DETAIL ── */
+    .back-btn { background: none; color: var(--gold); font-size: 14px; padding: 0;
+      display: flex; align-items: center; gap: 6px; margin-bottom: 16px; }
+    .detail-result-row { display: flex; align-items: center; gap: 12px;
+      padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .detail-pos { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--text3); width: 28px; }
+    .detail-name { flex: 1; font-weight: 600; font-size: 15px; }
+    .detail-pts { font-family: 'Bebas Neue', sans-serif; font-size: 20px; color: var(--gold); }
+    .detail-camp { font-size: 11px; color: var(--text2); }
+    .detail-money-win { color: #7ddb9a; font-size: 12px; font-weight: 600; }
+    .detail-money-lose { color: #e07777; font-size: 12px; }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="screen-login" class="screen active">
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="login-logo">
+        <img src="https://remeledus.github.io/Lapodrida/logo-full.png" style="width:90px;height:90px;object-fit:contain"/>
+        <div class="login-title">PODRIDA TEAM</div>
+        <div class="login-sub">APERTURA 2026</div>
+      </div>
+      <div class="login-form">
+        <div class="form-group">
+          <label class="form-label">USUARIO</label>
+          <input class="form-input" id="login-user" type="text" placeholder="Tu nombre" autocomplete="off"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">CONTRASEÑA</label>
+          <input class="form-input" id="login-pass" type="password" placeholder="••••••"/>
+        </div>
+        <button class="login-btn" id="login-btn" onclick="doLogin()">INGRESAR</button>
+        <div class="login-error" id="login-error"></div>
+      </div>
+      <div class="login-guest">
+        <button onclick="doGuest()">Ver como espectador →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="screen-main" class="screen">
+  <div class="main-header">
+    <div class="main-header-logo">
+      <img src="https://remeledus.github.io/Lapodrida/logo-full.png" style="width:90px;height:90px;object-fit:contain"/>
+      <span class="main-header-title">PODRIDA TEAM</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span class="main-header-user" id="header-user"></span>
+      <button class="logout-btn" onclick="doLogout()">Salir</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('tabla')">🏆 TABLA</div>
+    <div class="tab" onclick="showTab('partidas')">🃏 PARTIDAS</div>
+    <div class="tab" onclick="showTab('stats')">📊 STATS</div>
+    <div class="tab" onclick="showTab('historico')">📜 HISTORIAL</div>
+  </div>
+
+  <!-- TABLA TAB -->
+  <div id="tab-tabla" class="page">
+    <div class="section-title">TABLA DE POSICIONES</div>
+    <div class="section-sub" id="tabla-sub">Apertura 2026</div>
+    <div id="tabla-content" class="loading">Cargando...</div>
+  </div>
+
+  <!-- PARTIDAS TAB -->
+  <div id="tab-partidas" class="page" style="display:none">
+    <div class="section-title">PARTIDAS</div>
+    <div class="section-sub" id="partidas-sub">Cargando...</div>
+    <div id="partidas-content" class="loading">Cargando...</div>
+  </div>
+
+  <!-- HISTORICO TAB -->
+  <div id="tab-historico" class="page" style="display:none">
+    <div class="section-title">HISTORIAL</div>
+    <div class="section-sub">Estadísticas acumuladas por jugador</div>
+    <div id="historico-content" class="loading">Cargando...</div>
+  </div>
+
+  <!-- STATS TAB -->
+  <div id="tab-stats" class="page" style="display:none">
+    <div class="section-title">ESTADÍSTICAS</div>
+    <div class="section-sub">Rendimiento por jugador</div>
+    <select class="player-selector" id="stats-player" onchange="loadStats()">
+      <option value="">— Elegir jugador —</option>
+    </select>
+    <div id="stats-content" class="empty">Elegí un jugador para ver sus estadísticas</div>
+  </div>
+</div>
+
+<script>
+const SB_URL = "https://akaxqrvhywivpilsavlj.supabase.co";
+const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFrYXhxcnZoeXdpdnBpbHNhdmxqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyOTUwMDgsImV4cCI6MjA5Mjg3MTAwOH0.6ZY33hNBy-O40fBM5WlAYGxMoGo1subI4Nge0ycM0cc";
+
+// Simple users (in a real app these would be in Supabase Auth)
+const USERS = {
+  "ALE": "podrida2026", "FEDE": "podrida2026", "VILLI": "podrida2026",
+  "COSI": "podrida2026", "FER": "podrida2026", "SUSA": "podrida2026",
+  "MAURO": "podrida2026", "APO": "podrida2026", "RODRI": "podrida2026",
+  "LEMON": "podrida2026", "LUISMI": "podrida2026", "JUANCHI": "podrida2026",
+  "MARCOS": "podrida2026", "RAUL": "podrida2026", "PATU": "podrida2026",
+  "PELA": "podrida2026", "ADMIN": "podrida2018"
+};
+
+let currentUser = null;
+let isGuest = false;
+let activeTab = "tabla";
+let jugadoresCache = [];
+let tablaCache = [];
+
+async function sb(path, opts={}) {
+  const res = await fetch(SB_URL + "/rest/v1/" + path, {
+    headers: {
+      "apikey": SB_KEY,
+      "Authorization": "Bearer " + SB_KEY,
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+      ...opts.headers
+    },
+    method: opts.method || "GET",
+    body: opts.body
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(err);
+  }
+  const txt = await res.text();
+  if (!txt) return [];
+  const parsed = JSON.parse(txt);
+  return Array.isArray(parsed) ? parsed : [parsed];
+}
+
+// ── Auth ──────────────────────────────────────────────────────────────────
+function doLogin() {
+  const user = document.getElementById("login-user").value.trim().toUpperCase();
+  const pass = document.getElementById("login-pass").value;
+  if (!USERS[user] || USERS[user] !== pass) {
+    document.getElementById("login-error").textContent = "Usuario o contraseña incorrectos";
+    return;
+  }
+  currentUser = user;
+  isGuest = false;
+  enterApp();
+}
+
+function doGuest() {
+  currentUser = "ESPECTADOR";
+  isGuest = true;
+  enterApp();
+}
+
+function doLogout() {
+  currentUser = null;
+  isGuest = false;
+  showScreen("login");
+}
+
+function enterApp() {
+  document.getElementById("header-user").textContent = currentUser;
+  showScreen("main");
+  loadTabla();
+  loadJugadoresSelector();
+}
+
+// ── Navigation ────────────────────────────────────────────────────────────
+function showScreen(name) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById("screen-" + name).classList.add("active");
+  window.scrollTo(0, 0);
+}
+
+function showTab(name) {
+  activeTab = name;
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll("[onclick^='showTab']").forEach((t, i) => {
+    if (t.getAttribute("onclick") === `showTab('${name}')`) t.classList.add("active");
+  });
+  ["tabla","partidas","stats","historico"].forEach(t => {
+    document.getElementById("tab-" + t).style.display = t === name ? "block" : "none";
+  });
+  if (name === "tabla") loadTabla();
+  if (name === "partidas") loadPartidas();
+  if (name === "stats") loadStats();
+  if (name === "historico") loadHistorico();
+}
+
+// ── Tabla ─────────────────────────────────────────────────────────────────
+async function loadTabla() {
+  try {
+    // Detect active campeonato
+    const camps = await sb("campeonatos?select=*&activo=eq.true&order=id.desc&limit=1");
+    const camp = camps.length ? camps[0] : {id: 1, nombre: "Apertura", temporada: "2026"};
+    const campId = camp.id;
+    const campName = camp.nombre + " " + camp.temporada;
+    document.getElementById("tabla-sub").textContent = campName;
+
+    const historial = await sb("historial_campeonato?select=*&campeonato_id=eq." + campId);
+    const jugadores = await sb("jugadores?select=id,nombre");
+    
+    const jugMap = {};
+    for (const j of jugadores) {
+      jugMap[String(j.id)] = j.nombre;
+    }
+    tablaCache = historial;
+
+    if (!historial.length) {
+      document.getElementById("tabla-content").innerHTML = '<div class="empty">No hay datos</div>';
+      return;
+    }
+
+    // Max PJ for corte (50% of max PJ player)
+    const allPlayers = historial.map(r => ({
+      nombre: jugMap[String(r.jugador_id)] || "ID:"+r.jugador_id,
+      pts: r.puntos_total,
+      pj: r.partidas_jugadas,
+      prom: r.partidas_jugadas > 0 ? r.puntos_total / r.partidas_jugadas : 0,
+      dinero: r.dinero_neto || 0
+    }));
+    const maxPJ = Math.max(...allPlayers.map(p => p.pj));
+    const cutoffPJ = maxPJ * 0.5;
+
+    // Split into above and below cutoff, each sorted by promedio
+    const above = allPlayers.filter(p => p.pj > cutoffPJ).sort((a,b) => b.prom - a.prom);
+    const below = allPlayers.filter(p => p.pj <= cutoffPJ).sort((a,b) => b.pj - a.pj === 0 ? b.prom - a.prom : b.pj - a.pj);
+    const sorted = [...above, ...below];
+    const leader = sorted[0];
+
+    let rows = "";
+    let corteDone = false;
+    sorted.forEach((p, i) => {
+      // Insert corte bar after last above-cutoff player
+      if (!corteDone && i === above.length) {
+        rows += `<tr><td colspan="7" style="padding:0"><div class="corte-bar">CORTE POLLERAS — ${Math.ceil(cutoffPJ)} PJ</div></td></tr>`;
+        corteDone = true;
+      }
+
+      const pos = i + 1;
+      const posClass = pos === 1 ? "pos-1" : pos === 2 ? "pos-2" : pos === 3 ? "pos-3" : "pos-n";
+      const diff = pos === 1 ? "" : (leader.prom - p.prom).toFixed(3).replace(".", ",");
+      const prom = p.prom.toFixed(3).replace(".", ",");
+      rows += `<tr>
+        <td><span class="pos-badge ${posClass}">${pos}</span></td>
+        <td><span class="player-name">${p.nombre}</span></td>
+        <td><span class="promedio">${prom}</span></td>
+        <td><span class="pts">${p.pts}</span></td>
+        <td><span class="pj">${p.pj}</span></td>
+        <td><span class="diff">${diff ? "-"+diff : "—"}</span></td>
+        <td><span class="${p.dinero >= 0 ? 'money-win' : 'money-lose'}">${p.dinero >= 0 ? '+' : ''}${p.dinero.toLocaleString("es-AR")}</span></td>
+      </tr>`;
+    });
+
+
+
+    document.getElementById("tabla-content").innerHTML = `
+      <div class="table-card">
+        <table class="standings-table">
+          <thead><tr>
+            <th>#</th><th>JUGADOR</th><th>PROM</th><th>PTS</th><th>PJ</th><th>+/-</th><th>💰</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+  } catch(e) {
+    document.getElementById("tabla-content").innerHTML = `<div class="empty">Error: ${e.message}</div>`;
+  }
+}
+
+// ── Partidas ──────────────────────────────────────────────────────────────
+async function loadPartidas() {
+  document.getElementById("partidas-content").innerHTML = '<div class="loading">Cargando...</div>';
+  try {
+    const camps = await sb("campeonatos?select=*&activo=eq.true&order=id.desc&limit=1");
+    const camp = camps.length ? camps[0] : {id: 1, nombre: "Apertura", temporada: "2026"};
+    const subEl = document.getElementById("partidas-sub");
+    if (subEl) subEl.textContent = "Historial del " + camp.nombre + " " + camp.temporada;
+    const partidas = await sb("partidas?select=*&campeonato_id=eq." + camp.id + "&order=created_at.desc");
+    if (!partidas.length) {
+      document.getElementById("partidas-content").innerHTML = '<div class="empty">No hay partidas registradas aún</div>';
+      return;
+    }
+
+    // Load results for each partida
+    const [results, jugadores] = await Promise.all([
+      sb("resultados?select=*&partida_id=in.(" + partidas.map(p=>p.id).join(",") + ")&order=posicion.asc"),
+      sb("jugadores?select=*")
+    ]);
+    const jugMap = {};
+    jugadores.forEach(j => jugMap[j.id] = j.nombre);
+    results.forEach(r => r.jugadores = { nombre: jugMap[r.jugador_id] || "?" });
+
+    let html = "";
+    partidas.forEach(p => {
+      const pResults = results.filter(r => r.partida_id === p.id);
+      const winner = pResults.find(r => r.posicion === 1);
+      const fecha = new Date(p.fecha + "T12:00:00").toLocaleDateString("es-AR", {weekday:"short", day:"numeric", month:"short"});
+      const statusClass = p.estado === "en_curso" ? "status-live" : "status-done";
+      const statusText = p.estado === "en_curso" ? "EN VIVO" : "FINALIZADA";
+      const chips = pResults.map(r =>
+        `<span class="player-chip ${r.posicion === 1 ? "winner" : ""}">${r.jugadores.nombre}${r.posicion === 1 ? " 🥇" : ""}</span>`
+      ).join("");
+      html += `<div class="partida-card" onclick="showPartidaDetail(${p.id})">
+        <div class="partida-header">
+          <span class="partida-date">📅 ${fecha}</span>
+          <span class="partida-status ${statusClass}">${statusText}</span>
+        </div>
+        <div class="partida-players">${chips || '<span style="color:var(--text3);font-size:12px">Sin resultados</span>'}</div>
+      </div>`;
+    });
+
+    document.getElementById("partidas-content").innerHTML = html;
+  } catch(e) {
+    document.getElementById("partidas-content").innerHTML = `<div class="empty">Error: ${e.message}</div>`;
+  }
+}
+
+async function showPartidaDetail(id) {
+  document.getElementById("partidas-content").innerHTML = `
+    <button class="back-btn" onclick="loadPartidas()">← Volver</button>
+    <div class="loading">Cargando...</div>`;
+  try {
+    const [results, jugadores] = await Promise.all([
+      sb("resultados?select=*&partida_id=eq." + id + "&order=posicion.asc"),
+      sb("jugadores?select=*")
+    ]);
+    const jugMap = {};
+    jugadores.forEach(j => jugMap[j.id] = j.nombre);
+    results.forEach(r => r.jugadores = { nombre: jugMap[r.jugador_id] || "?" });
+    const partida = await sb("partidas?select=*&id=eq." + id);
+    const p = partida[0];
+    const fecha = new Date(p.fecha + "T12:00:00").toLocaleDateString("es-AR", {weekday:"long", day:"numeric", month:"long"});
+
+    const prizes = {4:[3000,-500,-1000,-1500],5:[4000,-500,-1000,-1000,-1500],6:[5000,-500,-500,-1000,-1500,-1500],7:[6000,-500,-500,-1000,-1000,-1500,-1500]};
+    const prizeList = prizes[results.length] || [];
+
+    let rows = results.map((r, i) => {
+      const money = prizeList[i] || 0;
+      const moneyHtml = money > 0
+        ? `<span class="detail-money-win">💰 ${money.toLocaleString("es-AR")}</span>`
+        : `<span class="detail-money-lose">💸 ${Math.abs(money).toLocaleString("es-AR")}</span>`;
+      return `<div class="detail-result-row">
+        <div class="detail-pos">${r.posicion}</div>
+        <div>
+          <div class="detail-name">${r.jugadores.nombre}</div>
+          <div class="detail-camp">🏅 ${r.puntos_campeonato} pts camp.</div>
+        </div>
+        <div style="text-align:right">
+          <div class="detail-pts">${r.puntos_partida} pts</div>
+          ${moneyHtml}
+        </div>
+      </div>`;
+    }).join("");
+
+    document.getElementById("partidas-content").innerHTML = `
+      <button class="back-btn" onclick="loadPartidas()">← Volver</button>
+      <div class="section-title" style="font-size:20px;margin-bottom:4px">Partida</div>
+      <div class="section-sub" style="margin-bottom:16px">${fecha}</div>
+      <div class="table-card" style="padding:8px 14px">${rows}</div>`;
+  } catch(e) {
+    document.getElementById("partidas-content").innerHTML = `<button class="back-btn" onclick="loadPartidas()">← Volver</button><div class="empty">Error</div>`;
+  }
+}
+
+// ── Stats ─────────────────────────────────────────────────────────────────
+async function loadHistorico() {
+  document.getElementById("historico-content").innerHTML = '<div class="loading">Cargando...</div>';
+  try {
+    const [histData, jugadores] = await Promise.all([
+      sb("historial_historico?select=*"),
+      sb("jugadores?select=*")
+    ]);
+    const jugMap = {};
+    jugadores.forEach(j => jugMap[j.id] = j.nombre);
+
+    // Aggregate by player
+    const playerStats = {};
+    histData.forEach(r => {
+      const nombre = jugMap[r.jugador_id] || "?";
+      if (!playerStats[nombre]) playerStats[nombre] = { triunfos: 0, pj: 0 };
+      playerStats[nombre].triunfos += r.triunfos;
+      playerStats[nombre].pj += r.partidas_jugadas;
+    });
+
+    // Sort by pj desc
+    const sorted = Object.entries(playerStats)
+      .map(([nombre, s]) => ({
+        nombre,
+        triunfos: s.triunfos,
+        pj: s.pj,
+        pct: s.pj > 0 ? ((s.triunfos / s.pj) * 100).toFixed(1) : "0.0"
+      }))
+      .sort((a, b) => b.pj - a.pj);
+
+    const maxPJ = Math.max(...sorted.map(p => p.pj), 1);
+
+    let rows = sorted.map((p, i) => `
+      <tr>
+        <td style="color:var(--text2)">${i+1}</td>
+        <td><span class="player-name">${p.nombre}</span></td>
+        <td style="color:var(--gold);font-weight:700">${p.triunfos}</td>
+        <td style="color:var(--text2)">${p.pj}</td>
+        <td style="color:var(--text2)">${p.pct}%</td>
+      </tr>`).join("");
+
+    document.getElementById("historico-content").innerHTML = `
+      <div class="table-card">
+        <table class="standings-table">
+          <thead><tr>
+            <th>#</th><th>JUGADOR</th><th>🥇 WINS</th><th>PJ</th><th>%WIN</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+  } catch(e) {
+    document.getElementById("historico-content").innerHTML = `<div class="empty">Error: ${e.message}</div>`;
+  }
+}
+
+async function loadJugadoresSelector() {
+  try {
+    const jugs = await sb("jugadores?select=*&order=nombre.asc");
+    jugadoresCache = jugs;
+    const sel = document.getElementById("stats-player");
+    jugs.forEach(j => {
+      const opt = document.createElement("option");
+      opt.value = j.id;
+      opt.textContent = j.nombre;
+      sel.appendChild(opt);
+    });
+  } catch(e) {}
+}
+
+async function loadStats() {
+  const sel = document.getElementById("stats-player");
+  const jid = sel.value;
+  if (!jid) return;
+  document.getElementById("stats-content").innerHTML = '<div class="loading">Cargando...</div>';
+  try {
+    const hist = await sb("historial_campeonato?select=*&jugador_id=eq." + jid + "&campeonato_id=eq.1");
+    const resultados = await sb("resultados?select=*&jugador_id=eq." + jid + "&order=id.desc&limit=20");
+    const partidas_total = await sb("resultados?select=id&jugador_id=eq." + jid);
+
+    const h = hist[0] || {puntos_total:0, partidas_jugadas:0};
+    const prom = h.partidas_jugadas > 0 ? (h.puntos_total / h.partidas_jugadas).toFixed(3).replace(".",",") : "0,000";
+    const victorias = resultados.filter(r => r.posicion === 1).length;
+    const podio = resultados.filter(r => r.posicion <= 3).length;
+    const totalPJ = partidas_total.length;
+
+    // Position distribution
+    const posDist = {};
+    resultados.forEach(r => { posDist[r.posicion] = (posDist[r.posicion]||0) + 1; });
+    const maxPos = Math.max(...Object.values(posDist), 1);
+    const posRows = Object.entries(posDist).sort((a,b)=>a[0]-b[0]).map(([pos, cnt]) => `
+      <div class="stat-bar-row">
+        <div class="stat-bar-label">${pos}° lugar</div>
+        <div class="stat-bar-track"><div class="stat-bar-fill" style="width:${(cnt/maxPos)*100}%"></div></div>
+        <div class="stat-bar-val">${cnt}</div>
+      </div>`).join("");
+
+    document.getElementById("stats-content").innerHTML = `
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-value">${prom}</div><div class="stat-label">PROMEDIO</div></div>
+        <div class="stat-card"><div class="stat-value">${h.puntos_total}</div><div class="stat-label">PUNTOS TOTALES</div></div>
+        <div class="stat-card"><div class="stat-value">${h.partidas_jugadas}</div><div class="stat-label">PARTIDAS JUGADAS</div></div>
+        <div class="stat-card"><div class="stat-value">${victorias}</div><div class="stat-label">VICTORIAS</div></div>
+      </div>
+      <div class="table-card" style="padding:14px">
+        <div style="font-size:11px;letter-spacing:1.5px;color:var(--gold);font-weight:700;margin-bottom:12px">DISTRIBUCIÓN DE POSICIONES</div>
+        ${posRows || '<div class="empty" style="padding:10px">Sin datos</div>'}
+      </div>`;
+  } catch(e) {
+    document.getElementById("stats-content").innerHTML = `<div class="empty">Error: ${e.message}</div>`;
+  }
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────
+document.getElementById("login-pass").addEventListener("keydown", e => {
+  if (e.key === "Enter") doLogin();
+});
+</script>
+</body>
+</html>
